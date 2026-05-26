@@ -1,0 +1,12 @@
+schema_version: 1
+id: 5088bf44-be0e-47b1-9cd1-5ae24f92a0c5
+name: '<thought>* Input: A chat conversation between an "assista...'
+status: planning
+created_at: 2026-05-26T05:46:02.933073900+00:00
+updated_at: 2026-05-26T05:53:19.205825+00:00
+cards_total: 0
+cards_done: 0
+cards_failed: 0
+agents_active: 0
+default_agent_model: google_gemini/gemma-4-26b-a4b-it
+is_name_generated: true
