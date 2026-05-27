@@ -1296,24 +1296,33 @@ function SWEP:Think()
 	end
 
 	if SERVER and owner:KeyPressed(IN_ATTACK) and owner:KeyDown(IN_USE) and not self:GetFists() and not owner:GetNetVar("handcuffed", false) and not self.pushCooldown and not IsValid(self.CarryEnt) then
-		local pos = hg.eye(owner)
-		local tr = util.QuickTrace(pos, owner:GetAimVector() * self.ReachDistance, {owner, hg.GetCurrentCharacter(owner)})
+		hg.RunZManipAnim(owner, "interact")
+		self.pushCooldown = CurTime() + 1
 
-		if IsValid(tr.Entity) and tr.Entity:IsPlayer() then
-			hg.RunZManipAnim(owner, "interact")
+		timer.Simple(0.35, function()
+			if not IsValid(owner) or owner:GetActiveWeapon() ~= self then return end
 
-			local target = tr.Entity
-			timer.Simple(0.35, function()
-				if not IsValid(owner) or not IsValid(target) or owner:GetActiveWeapon() ~= self then return end
+			local pos = hg.eye(owner)
+			local tr = util.QuickTrace(pos, owner:GetAimVector() * self.ReachDistance, {owner, hg.GetCurrentCharacter(owner)})
 
+			if IsValid(tr.Entity) then
 				local speed = owner:GetVelocity():Length()
-				target:SetVelocity(owner:GetAimVector() * math.max(speed * 2, 50))
+				local pushMul = math.max(speed * 2, 50)
 
-				if speed > 300 then
-					hg.LightStunPlayer(target, 2)
+				if tr.Entity:IsPlayer() or tr.Entity:IsNPC() then
+					tr.Entity:SetVelocity(owner:GetAimVector() * pushMul)
+
+					if tr.Entity:IsPlayer() and speed > 300 then
+						hg.LightStunPlayer(tr.Entity, 2)
+					end
+				else
+					local phys = tr.Entity:GetPhysicsObject()
+					if IsValid(phys) then
+						phys:ApplyForceCenter(owner:GetAimVector() * pushMul * 20)
+					end
 				end
-			end)
-		end
+			end
+		end)
 	end
 
 	if self.pushCooldown and self.pushCooldown < CurTime() then
