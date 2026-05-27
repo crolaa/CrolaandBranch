@@ -1295,6 +1295,31 @@ function SWEP:Think()
 		self:SetCarrying()
 	end
 
+	if SERVER and owner:KeyPressed(IN_ATTACK) and owner:KeyDown(IN_USE) and not self:GetFists() and not owner:GetNetVar("handcuffed", false) and not self.pushCooldown and not IsValid(self.CarryEnt) then
+		local pos = hg.eye(owner)
+		local tr = util.QuickTrace(pos, owner:GetAimVector() * self.ReachDistance, {owner, hg.GetCurrentCharacter(owner)})
+
+		if IsValid(tr.Entity) and tr.Entity:IsPlayer() then
+			hg.RunZManipAnim(owner, "interact")
+
+			local target = tr.Entity
+			timer.Simple(0.35, function()
+				if not IsValid(owner) or not IsValid(target) or owner:GetActiveWeapon() ~= self then return end
+
+				local speed = owner:GetVelocity():Length()
+				target:SetVelocity(owner:GetAimVector() * math.max(speed * 2, 50))
+
+				if speed > 300 then
+					hg.LightStunPlayer(target, 2)
+				end
+			end)
+		end
+	end
+
+	if self.pushCooldown and self.pushCooldown < CurTime() then
+		self.pushCooldown = nil
+	end
+
 	if self:GetFists() and owner:KeyDown(IN_ATTACK2) and (self:GetNextSecondaryFire() < CurTime()) and owner.PlayerClassName ~= "sc_infiltrator" and owner.PlayerClassName ~= "headcrabzombie" then
 		self:SetNextPrimaryFire(CurTime() + .5)
 		self:SetBlocking(true)
@@ -1989,6 +2014,8 @@ function SWEP:Holster( wep )
 	if owner.PlayerClassName == "headcrabzombie" then
 		return false
 	end
+
+	self.pushCooldown = nil
 
 	return true
 end
